@@ -20,50 +20,56 @@ export function createGroupingEditor({ store }) {
   root.className = "panel grouping-panel";
   root.innerHTML = `
     <h2>Meter & Grouping</h2>
-    <div class="field-grid">
-      <label class="field">
-        <span>Numerator</span>
-        <input data-id="numerator" type="number" min="1" max="${MAX_NUMERATOR}" />
-      </label>
-      <label class="field">
-        <span>Denominator</span>
-        <select data-id="denominator"></select>
-      </label>
-      <label class="field full">
-        <span>Grouping (use +)</span>
-        <input data-id="grouping" type="text" placeholder="2+2+3" />
-      </label>
-    </div>
-    <div class="preset-list" data-id="presets"></div>
-    <div class="field">
-      <span>Accent Pattern</span>
-      <div class="accent-grid" data-id="accent-grid"></div>
-      <p class="hint">Click each beat to cycle strong → medium → weak.</p>
-    </div>
-    <div class="field">
-      <span>Sound Set</span>
-      <select data-id="sound-set">
-        <option value="classic">Classic Click</option>
-        <option value="woodblock">Woodblock</option>
-      </select>
-    </div>
-    <div class="field-grid">
-      <label class="field">
-        <span>Accent Vol</span>
-        <input data-id="vol-accent" type="range" min="0" max="1" step="0.01" />
-      </label>
-      <label class="field">
-        <span>Normal Vol</span>
-        <input data-id="vol-normal" type="range" min="0" max="1" step="0.01" />
-      </label>
-      <label class="field">
-        <span>Ghost Vol</span>
-        <input data-id="vol-ghost" type="range" min="0" max="1" step="0.01" />
-      </label>
-      <label class="field">
-        <span>Flash</span>
-        <input data-id="flash" type="range" min="0.2" max="1" step="0.01" />
-      </label>
+    <div class="grouping-layout">
+      <div class="grouping-left">
+        <div class="field-grid meter-grid">
+          <label class="field">
+            <span>Numerator</span>
+            <input data-id="numerator" type="number" min="1" max="${MAX_NUMERATOR}" />
+          </label>
+          <label class="field">
+            <span>Denominator</span>
+            <select data-id="denominator"></select>
+          </label>
+          <label class="field full">
+            <span>Grouping (use +)</span>
+            <input data-id="grouping" type="text" placeholder="2+2+3" />
+          </label>
+        </div>
+        <div class="preset-list" data-id="presets"></div>
+      </div>
+      <div class="grouping-right">
+        <div class="field accent-field">
+          <span>Accent Pattern</span>
+          <div class="accent-grid" data-id="accent-grid"></div>
+          <p class="hint">Click each beat to cycle strong → medium → weak.</p>
+        </div>
+        <div class="field">
+          <span>Sound Set</span>
+          <select data-id="sound-set">
+            <option value="classic">Classic Click</option>
+            <option value="woodblock">Woodblock</option>
+          </select>
+        </div>
+        <div class="field-grid mix-grid">
+          <label class="field">
+            <span>Accent Vol</span>
+            <input data-id="vol-accent" type="range" min="0" max="1" step="0.01" />
+          </label>
+          <label class="field">
+            <span>Normal Vol</span>
+            <input data-id="vol-normal" type="range" min="0" max="1" step="0.01" />
+          </label>
+          <label class="field">
+            <span>Ghost Vol</span>
+            <input data-id="vol-ghost" type="range" min="0" max="1" step="0.01" />
+          </label>
+          <label class="field">
+            <span>Flash</span>
+            <input data-id="flash" type="range" min="0.2" max="1" step="0.01" />
+          </label>
+        </div>
+      </div>
     </div>
   `;
 

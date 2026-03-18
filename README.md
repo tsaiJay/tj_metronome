@@ -1,6 +1,6 @@
 # Web Practice Metronome
 
-一個用於音樂練習的網頁節拍器，支援：
+音樂練習用的網頁節拍器
 
 - 穩定 Web Audio 排程（lookahead scheduler）
 - Odd meter（`5/4`, `7/8`, `9/8`, `11/8`）與 grouping 編輯
@@ -8,6 +8,8 @@
 - Profile 儲存（localStorage）
 - Count-in、Tap Tempo、Auto Ramp、快捷鍵
 - 基本視覺化（拍點環、小節分組進度、Bar/Beat 計數）
+
+![Metronome UI Example](docs/ui-sample.png)
 
 ## 需求
 

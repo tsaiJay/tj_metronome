@@ -1,4 +1,5 @@
 import { AudioScheduler } from "./audio/scheduler.js";
+import { createAdvancePanel } from "./components/advance-panel.js";
 import { createBeatVisualizer } from "./components/beat-visualizer.js";
 import { createGroupingEditor } from "./components/grouping-editor.js";
 import { createProfileList } from "./components/profile-list.js";
@@ -12,6 +13,7 @@ const scheduler = new AudioScheduler(store);
 const profilePanel = createProfileList({ store });
 const visualizer = createBeatVisualizer();
 const transportPanel = createTransportPanel({ store, scheduler });
+const advancePanel = createAdvancePanel({ store });
 const groupingPanel = createGroupingEditor({ store });
 
 const shell = document.createElement("main");
@@ -43,8 +45,9 @@ mobileStatus.innerHTML = `
 `;
 centerCol.appendChild(mobileStatus);
 centerCol.appendChild(visualizer.element);
-centerCol.appendChild(transportPanel.element);
-rightCol.appendChild(groupingPanel.element);
+centerCol.appendChild(groupingPanel.element);
+rightCol.appendChild(transportPanel.element);
+rightCol.appendChild(advancePanel.element);
 
 function renderMobileSummary(snapshot) {
   const node = mobileStatus.querySelector('[data-id="summary"]');
@@ -58,6 +61,7 @@ function render(snapshot) {
   profilePanel.render(snapshot);
   visualizer.render(snapshot);
   transportPanel.render(snapshot);
+  advancePanel.render(snapshot);
   groupingPanel.render(snapshot);
   renderMobileSummary(snapshot);
 }
