@@ -1,4 +1,10 @@
 import { getNextGroupingBeat } from "../state/metronome-store.js";
+import {
+  getMeterBeatIndexForPulse,
+  getPulseDurationSeconds,
+  getPulsesPerBar,
+  isMeterBeatBoundaryPulse,
+} from "../lib/meter.js";
 import { playClickVoice } from "./click-voices.js";
 
 const LOOKAHEAD_MS = 25;
@@ -19,7 +25,7 @@ export class AudioScheduler {
     this.masterGain = null;
     this.timerId = null;
     this.nextNoteTime = 0;
-    this.beatIndex = 1;
+    this.pulseIndex = 1;
     this.barIndex = 1;
     this.countInRemainingBars = 0;
     this.tapTimestamps = [];
@@ -47,13 +53,14 @@ export class AudioScheduler {
     if (this.isRunning) return;
 
     const { config, runtime } = this.store.getSnapshot();
-    this.beatIndex = 1;
+    this.pulseIndex = 1;
     this.barIndex = 1;
     this.nextNoteTime = this.context.currentTime + 0.05;
     this.countInRemainingBars = runtime.state === "paused" ? 0 : config.countInBars;
     this.store.updateRuntime({
       barIndex: this.barIndex,
-      beatIndex: this.beatIndex,
+      beatIndex: this.pulseIndex,
+      meterBeatIndex: 1,
       groupedBeatIndex: 1,
       activeGroupIndex: 0,
     });
@@ -72,6 +79,7 @@ export class AudioScheduler {
     this.store.updateRuntime({
       barIndex: 1,
       beatIndex: 1,
+      meterBeatIndex: 1,
       groupedBeatIndex: 1,
       activeGroupIndex: 0,
       currentBeatTime: 0,
@@ -125,8 +133,10 @@ export class AudioScheduler {
     const snapshot = this.store.getSnapshot();
     const { config, runtime } = snapshot;
     const isCountIn = runtime.state === "countIn";
-    const strong = this.beatIndex === 1 || isStrongBeat(config, this.beatIndex);
-    const medium = isMediumBeat(config, this.beatIndex);
+    const meterBeatIndex = getMeterBeatIndexForPulse(config, this.pulseIndex);
+    const isBoundaryPulse = isMeterBeatBoundaryPulse(config, this.pulseIndex);
+    const strong = this.pulseIndex === 1 || (isBoundaryPulse && isStrongBeat(config, meterBeatIndex));
+    const medium = isBoundaryPulse && isMediumBeat(config, meterBeatIndex);
     const layer = strong ? "accent" : medium ? "normal" : "ghost";
 
     playClickVoice(this.context, this.masterGain, {
@@ -138,16 +148,18 @@ export class AudioScheduler {
       volumeGhost: config.volumeGhost,
     });
 
-    const groupingMeta = getNextGroupingBeat(config.grouping, this.beatIndex);
+    const groupingMeta = getNextGroupingBeat(config.grouping, meterBeatIndex);
     this.store.updateRuntime({
-      beatIndex: this.beatIndex,
+      beatIndex: this.pulseIndex,
+      meterBeatIndex,
       barIndex: this.barIndex,
       groupedBeatIndex: groupingMeta.groupBeatIndex,
       activeGroupIndex: groupingMeta.groupIndex,
       currentBeatTime: when,
     });
     this.onScheduledBeat?.({
-      beatIndex: this.beatIndex,
+      beatIndex: this.pulseIndex,
+      meterBeatIndex,
       barIndex: this.barIndex,
       when,
       isCountIn,
@@ -157,11 +169,12 @@ export class AudioScheduler {
 
   #advanceBeat() {
     const { config } = this.store.getSnapshot();
-    const beatDuration = 60 / config.bpm;
-    this.nextNoteTime += beatDuration;
-    this.beatIndex += 1;
-    if (this.beatIndex > config.timeSigNumerator) {
-      this.beatIndex = 1;
+    const pulseDuration = getPulseDurationSeconds(config);
+    const pulsesPerBar = getPulsesPerBar(config);
+    this.nextNoteTime += pulseDuration;
+    this.pulseIndex += 1;
+    if (this.pulseIndex > pulsesPerBar) {
+      this.pulseIndex = 1;
       this.barIndex += 1;
       this.#onBarBoundary();
     }

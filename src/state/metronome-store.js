@@ -122,6 +122,7 @@ export class MetronomeStore {
       state: "idle",
       barIndex: 1,
       beatIndex: 1,
+      meterBeatIndex: 1,
       groupedBeatIndex: 1,
       activeGroupIndex: 0,
       currentBeatTime: 0,

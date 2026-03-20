@@ -1,7 +1,24 @@
 import { buildPulseAngles } from "../audio/click-voices.js";
+import { getPulsesPerBar, isMeterBeatBoundaryPulse } from "../lib/meter.js";
+
+const RING_RADIUS = 125;
 
 function formatGrouping(grouping) {
   return grouping.join("+");
+}
+
+function buildRingPoints(config) {
+  const pulsesPerBar = getPulsesPerBar(config);
+  const angles = buildPulseAngles(pulsesPerBar);
+  return angles.map((angle, idx) => {
+    const pulseIndex = idx + 1;
+    const isBoundaryPulse = isMeterBeatBoundaryPulse(config, pulseIndex);
+    return {
+      angle,
+      pulseIndex,
+      isSubdivision: !isBoundaryPulse,
+    };
+  });
 }
 
 export function createBeatVisualizer() {
@@ -31,7 +48,6 @@ export function createBeatVisualizer() {
     <div class="runtime-counters">
       <p>Bar <span data-id="bar">1</span></p>
       <p>Beat <span data-id="beat">1</span></p>
-      <p>Next Bar in <span data-id="countdown">4</span></p>
     </div>
   `;
 
@@ -44,20 +60,21 @@ export function createBeatVisualizer() {
     barProgress: root.querySelector('[data-id="bar-progress"]'),
     bar: root.querySelector('[data-id="bar"]'),
     beat: root.querySelector('[data-id="beat"]'),
-    countdown: root.querySelector('[data-id="countdown"]'),
   };
 
   function renderRing(config, runtime) {
-    const angles = buildPulseAngles(config.timeSigNumerator);
+    const points = buildRingPoints(config);
     nodes.ring.innerHTML = "";
-    angles.forEach((angle, idx) => {
+    points.forEach((point) => {
       const dot = document.createElement("div");
-      dot.className = "pulse-dot";
-      const radius = 120;
-      const x = Math.cos(angle) * radius;
-      const y = Math.sin(angle) * radius;
+      dot.className = point.isSubdivision ? "pulse-dot subdivision" : "pulse-dot";
+      const x = Math.cos(point.angle) * RING_RADIUS;
+      const y = Math.sin(point.angle) * RING_RADIUS;
       dot.style.transform = `translate(${x}px, ${y}px)`;
-      if (idx + 1 === runtime.beatIndex && (runtime.state === "running" || runtime.state === "countIn")) {
+      if (
+        point.pulseIndex === runtime.beatIndex &&
+        (runtime.state === "running" || runtime.state === "countIn")
+      ) {
         dot.classList.add("active");
         dot.style.opacity = String(Math.max(config.flashIntensity, 0.25));
       }
@@ -67,6 +84,7 @@ export function createBeatVisualizer() {
 
   function renderBarProgress(config, runtime) {
     nodes.barProgress.innerHTML = "";
+    const meterBeatIndex = runtime.meterBeatIndex ?? runtime.beatIndex;
     let beatCursor = 1;
     config.grouping.forEach((groupSize, groupIndex) => {
       const item = document.createElement("div");
@@ -76,8 +94,8 @@ export function createBeatVisualizer() {
       const beatEnd = beatCursor + groupSize - 1;
       if (
         runtime.state !== "idle" &&
-        runtime.beatIndex >= beatCursor &&
-        runtime.beatIndex <= beatEnd &&
+        meterBeatIndex >= beatCursor &&
+        meterBeatIndex <= beatEnd &&
         runtime.activeGroupIndex === groupIndex
       ) {
         item.classList.add("active");
@@ -97,7 +115,6 @@ export function createBeatVisualizer() {
       nodes.state.textContent = runtime.pendingConfig ? `${runtime.state} (pending next bar)` : runtime.state;
       nodes.bar.textContent = String(runtime.barIndex);
       nodes.beat.textContent = String(runtime.beatIndex);
-      nodes.countdown.textContent = String(Math.max(1, config.timeSigNumerator - runtime.beatIndex + 1));
       renderRing(config, runtime);
       renderBarProgress(config, runtime);
     },

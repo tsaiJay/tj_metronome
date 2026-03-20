@@ -1,7 +1,7 @@
 export const BPM_MIN = 20;
 export const BPM_MAX = 500;
 
-export const TIME_SIG_DENOMINATOR_OPTIONS = [2, 4, 8, 16];
+export const TIME_SIG_DENOMINATOR_OPTIONS = [4, 8, 16, 32];
 export const MAX_NUMERATOR = 16;
 
 export const ACCENT_LEVELS = {

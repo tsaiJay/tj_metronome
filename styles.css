@@ -109,6 +109,13 @@ body {
   transition: all 90ms linear;
 }
 
+.pulse-dot.subdivision {
+  width: 10px;
+  height: 10px;
+  background: #465073;
+  opacity: 0.8;
+}
+
 .pulse-dot.active {
   background: var(--accent);
   box-shadow: 0 0 16px color-mix(in oklab, var(--accent), transparent 65%);
