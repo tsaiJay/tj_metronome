@@ -11,25 +11,6 @@
 
 ![Metronome UI Example](docs/ui-sample.png)
 
-## 需求
-
-- Python 3（建議）
-- 現代瀏覽器（Chrome / Edge / Firefox / Safari）
-
-## 如何運行
-
-在專案根目錄執行：
-
-```bash
-cd /home/tsai/Project/metronome
-python3 -m http.server 5173
-```
-
-打開瀏覽器：
-
-- [http://localhost:5173](http://localhost:5173)
-
-> 第一次播放前，請先點擊頁面上的 `Start`（瀏覽器自動播放政策會要求使用者手勢解鎖音訊）。
 
 ## 使用方式（快速）
 
@@ -39,51 +20,67 @@ python3 -m http.server 5173
 4. 用 `Practice Profiles` 儲存/套用練習場景
 5. 需要循序加速時開啟 `Auto Ramp`
 
+
 ## 快捷鍵
 
 - `Space`: Start / Pause
 - `ArrowUp` / `ArrowDown`: BPM ±1
 - `Shift + ArrowUp` / `Shift + ArrowDown`: BPM ±5
 
-## 專案結構
 
-```text
-.
-├── index.html
-├── styles.css
-└── src
-    ├── main.js
-    ├── audio
-    │   ├── click-voices.js
-    │   └── scheduler.js
-    ├── components
-    │   ├── beat-visualizer.js
-    │   ├── grouping-editor.js
-    │   ├── profile-list.js
-    │   └── transport-panel.js
-    ├── lib
-    │   └── constants.js
-    └── state
-        └── metronome-store.js
+## 佈署與開發
+
+### 開發
+
+在專案根目錄執行：
+
+```bash
+cd <project_path>/metronome
+python3 -m http.server 5173
 ```
 
-## 常見問題
+打開：
 
-### 1) 為什麼有時候沒有聲音？
+- [http://localhost:5173](http://localhost:5173)
 
-- 通常是 AudioContext 還沒被使用者手勢解鎖。先點一次 `Start`。
 
-### 2) 播放中改拍號為什麼不是立刻跳？
+### 佈署正式化服務 with Docker
 
-- 這是設計行為：拍號/grouping 在「下個小節」才套用，避免當前小節節拍錯亂。
+> 請先安裝 Docker
 
-### 3) Profile 會不會遺失？
+一鍵執行（build + run）：
 
-- 儲存在瀏覽器 `localStorage`。清除瀏覽器站點資料後會消失。
+```bash
+cd <project_path>/metronome
+./build/start.sh
+```
 
-## 後續可擴充
+手動流程：
 
-- Subdivision（8th / triplet / 16th）
-- PWA 離線安裝
-- MIDI clock / external control
-- 雲端同步 profiles
+1) 設定 port，在 `./build/env.config`（可不改，預設 `8080`）：
+
+```bash
+PROD_PORT=8080
+```
+
+2) 啟動正式容器：
+
+```bash
+cd <project_path>/metronome/build
+docker build -f Dockerfile -t metronome:prod ..
+source env.config
+docker run --rm -p "${PROD_PORT}:80" --name metronome-prod metronome:prod
+```
+
+服務會開在：
+
+- [http://localhost:8080](http://localhost:8080)
+
+停止正式容器：
+
+```bash
+cd <project_path>/metronome
+./build/stop.sh
+```
+
+
