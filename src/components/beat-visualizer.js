@@ -1,10 +1,32 @@
 import { buildPulseAngles } from "../audio/click-voices.js";
-import { getPulsesPerBar, isMeterBeatBoundaryPulse } from "../lib/meter.js";
+import {
+  getMeterBeatIndexForPulse,
+  getPulsesPerBar,
+  isMeterBeatBoundaryPulse,
+} from "../lib/meter.js";
 
 const RING_RADIUS = 125;
 
 function formatGrouping(grouping) {
   return grouping.join("+");
+}
+
+/** 1-based meter beat indices where a grouping segment starts (e.g. 3+3+2 → 1,4,7). */
+function getGroupStartMeterBeats(grouping) {
+  if (!grouping?.length) return [1];
+  const starts = [1];
+  let acc = 1;
+  for (let i = 0; i < grouping.length - 1; i++) {
+    acc += grouping[i];
+    starts.push(acc);
+  }
+  return starts;
+}
+
+function isGroupStartPulse(config, pulseIndex) {
+  if (!isMeterBeatBoundaryPulse(config, pulseIndex)) return false;
+  const meterBeat = getMeterBeatIndexForPulse(config, pulseIndex);
+  return getGroupStartMeterBeats(config.grouping).includes(meterBeat);
 }
 
 function buildRingPoints(config) {
@@ -17,6 +39,7 @@ function buildRingPoints(config) {
       angle,
       pulseIndex,
       isSubdivision: !isBoundaryPulse,
+      isGroupStart: isGroupStartPulse(config, pulseIndex),
     };
   });
 }
@@ -68,6 +91,7 @@ export function createBeatVisualizer() {
     points.forEach((point) => {
       const dot = document.createElement("div");
       dot.className = point.isSubdivision ? "pulse-dot subdivision" : "pulse-dot";
+      if (point.isGroupStart) dot.classList.add("group-start");
       const x = Math.cos(point.angle) * RING_RADIUS;
       const y = Math.sin(point.angle) * RING_RADIUS;
       dot.style.transform = `translate(${x}px, ${y}px)`;

@@ -116,6 +116,25 @@ body {
   opacity: 0.8;
 }
 
+/* Grouping segment downbeats (e.g. 3+3+2): dot + one ring */
+.pulse-dot.group-start::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1px solid #8b96b8;
+  box-sizing: border-box;
+  pointer-events: none;
+}
+
+.pulse-dot.group-start.active::before {
+  border-color: color-mix(in oklab, var(--accent), white 18%);
+}
+
 .pulse-dot.active {
   background: var(--accent);
   box-shadow: 0 0 16px color-mix(in oklab, var(--accent), transparent 65%);
