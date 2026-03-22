@@ -11,7 +11,7 @@ const store = new MetronomeStore();
 const scheduler = new AudioScheduler(store);
 
 const profilePanel = createProfileList({ store });
-const visualizer = createBeatVisualizer();
+const visualizer = createBeatVisualizer({ store });
 const transportPanel = createTransportPanel({ store, scheduler });
 const advancePanel = createAdvancePanel({ store });
 const groupingPanel = createGroupingEditor({ store });

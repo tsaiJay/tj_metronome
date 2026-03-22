@@ -10,14 +10,19 @@ export const ACCENT_LEVELS = {
   weak: "weak",
 };
 
+/** 正拍重音循環：strong → medium → weak → strong */
+export function cycleAccentLevel(current) {
+  if (current === ACCENT_LEVELS.strong) return ACCENT_LEVELS.medium;
+  if (current === ACCENT_LEVELS.medium) return ACCENT_LEVELS.weak;
+  return ACCENT_LEVELS.strong;
+}
+
 export const SOUND_SETS = {
   classic: "classic",
   woodblock: "woodblock",
 };
 
 export const STATE = {
-  idle: "idle",
-  countIn: "countIn",
   running: "running",
   paused: "paused",
 };
@@ -33,7 +38,6 @@ export const DEFAULT_CONFIG = {
   volumeNormal: 0.7,
   volumeGhost: 0.5,
   flashIntensity: 1,
-  countInBars: 1,
   autoRamp: {
     enabled: false,
     everyBars: 4,

@@ -1,9 +1,4 @@
-import {
-  ACCENT_LEVELS,
-  MAX_NUMERATOR,
-  ODD_METER_PRESETS,
-  TIME_SIG_DENOMINATOR_OPTIONS,
-} from "../lib/constants.js";
+import { MAX_NUMERATOR, ODD_METER_PRESETS, TIME_SIG_DENOMINATOR_OPTIONS } from "../lib/constants.js";
 import { createAccentPatternByGrouping } from "../state/metronome-store.js";
 
 function parseGrouping(raw, fallbackNumerator) {
@@ -39,11 +34,6 @@ export function createGroupingEditor({ store }) {
         <div class="preset-list" data-id="presets"></div>
       </div>
       <div class="grouping-right">
-        <div class="field accent-field">
-          <span>Accent Pattern</span>
-          <div class="accent-grid" data-id="accent-grid"></div>
-          <p class="hint">Click each beat to cycle strong → medium → weak.</p>
-        </div>
         <div class="field">
           <span>Sound Set</span>
           <select data-id="sound-set">
@@ -74,7 +64,6 @@ export function createGroupingEditor({ store }) {
     denominator: root.querySelector('[data-id="denominator"]'),
     grouping: root.querySelector('[data-id="grouping"]'),
     presets: root.querySelector('[data-id="presets"]'),
-    accentGrid: root.querySelector('[data-id="accent-grid"]'),
     soundSet: root.querySelector('[data-id="sound-set"]'),
     volAccent: root.querySelector('[data-id="vol-accent"]'),
     volNormal: root.querySelector('[data-id="vol-normal"]'),
@@ -100,7 +89,7 @@ export function createGroupingEditor({ store }) {
       grouping,
       accentPattern,
     };
-    if (snapshot.runtime.state === "running" || snapshot.runtime.state === "countIn") {
+    if (snapshot.runtime.state === "running") {
       store.queueConfigForNextBar(patch);
       return;
     }
@@ -124,30 +113,6 @@ export function createGroupingEditor({ store }) {
     store.updateConfig({ volumeGhost: Number(event.target.value) });
   });
 
-  function cycleAccent(current) {
-    if (current === ACCENT_LEVELS.strong) return ACCENT_LEVELS.medium;
-    if (current === ACCENT_LEVELS.medium) return ACCENT_LEVELS.weak;
-    return ACCENT_LEVELS.strong;
-  }
-
-  function renderAccentButtons(config) {
-    nodes.accentGrid.innerHTML = "";
-    config.accentPattern.forEach((accent, idx) => {
-      const button = document.createElement("button");
-      button.className = `accent-chip ${accent}`;
-      button.type = "button";
-      button.textContent = `${idx + 1}`;
-      button.title = accent;
-      button.addEventListener("click", () => {
-        const next = [...store.getSnapshot().config.accentPattern];
-        next[idx] = cycleAccent(next[idx]);
-        next[0] = ACCENT_LEVELS.strong;
-        store.updateConfig({ accentPattern: next });
-      });
-      nodes.accentGrid.appendChild(button);
-    });
-  }
-
   ODD_METER_PRESETS.forEach((preset) => {
     const button = document.createElement("button");
     button.type = "button";
@@ -162,7 +127,7 @@ export function createGroupingEditor({ store }) {
         accentPattern,
       };
       const snapshot = store.getSnapshot();
-      if (snapshot.runtime.state === "running" || snapshot.runtime.state === "countIn") {
+      if (snapshot.runtime.state === "running") {
         store.queueConfigForNextBar(patch);
       } else {
         store.updateConfig(patch);
@@ -182,7 +147,6 @@ export function createGroupingEditor({ store }) {
       nodes.volAccent.value = String(config.volumeAccent);
       nodes.volNormal.value = String(config.volumeNormal);
       nodes.volGhost.value = String(config.volumeGhost);
-      renderAccentButtons(config);
     },
   };
 }

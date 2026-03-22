@@ -27,7 +27,6 @@ export class AudioScheduler {
     this.nextNoteTime = 0;
     this.pulseIndex = 1;
     this.barIndex = 1;
-    this.countInRemainingBars = 0;
     this.tapTimestamps = [];
     this.onScheduledBeat = null;
   }
@@ -52,11 +51,9 @@ export class AudioScheduler {
     await this.ensureContext();
     if (this.isRunning) return;
 
-    const { config, runtime } = this.store.getSnapshot();
     this.pulseIndex = 1;
     this.barIndex = 1;
     this.nextNoteTime = this.context.currentTime + 0.05;
-    this.countInRemainingBars = runtime.state === "paused" ? 0 : config.countInBars;
     this.store.updateRuntime({
       barIndex: this.barIndex,
       beatIndex: this.pulseIndex,
@@ -65,7 +62,7 @@ export class AudioScheduler {
       activeGroupIndex: 0,
     });
 
-    this.store.setState(this.countInRemainingBars > 0 ? "countIn" : "running");
+    this.store.setState("running");
     this.timerId = window.setInterval(() => this.#tick(), LOOKAHEAD_MS);
     this.#tick();
   }
@@ -75,7 +72,7 @@ export class AudioScheduler {
       window.clearInterval(this.timerId);
       this.timerId = null;
     }
-    this.store.setState("idle");
+    this.store.setState("paused");
     this.store.updateRuntime({
       barIndex: 1,
       beatIndex: 1,
@@ -97,7 +94,7 @@ export class AudioScheduler {
 
   toggle() {
     const { runtime } = this.store.getSnapshot();
-    if (runtime.state === "running" || runtime.state === "countIn") {
+    if (runtime.state === "running") {
       this.pause();
     } else {
       this.start();
@@ -131,11 +128,10 @@ export class AudioScheduler {
 
   #scheduleBeat(when) {
     const snapshot = this.store.getSnapshot();
-    const { config, runtime } = snapshot;
-    const isCountIn = runtime.state === "countIn";
+    const { config } = snapshot;
     const meterBeatIndex = getMeterBeatIndexForPulse(config, this.pulseIndex);
     const isBoundaryPulse = isMeterBeatBoundaryPulse(config, this.pulseIndex);
-    const strong = this.pulseIndex === 1 || (isBoundaryPulse && isStrongBeat(config, meterBeatIndex));
+    const strong = isBoundaryPulse && isStrongBeat(config, meterBeatIndex);
     const medium = isBoundaryPulse && isMediumBeat(config, meterBeatIndex);
     const layer = strong ? "accent" : medium ? "normal" : "ghost";
 
@@ -162,7 +158,6 @@ export class AudioScheduler {
       meterBeatIndex,
       barIndex: this.barIndex,
       when,
-      isCountIn,
       groupingMeta,
     });
   }
@@ -184,13 +179,6 @@ export class AudioScheduler {
     const snapshot = this.store.getSnapshot();
     if (snapshot.runtime.pendingConfig) {
       this.store.applyPendingConfig();
-    }
-
-    if (snapshot.runtime.state === "countIn" && this.countInRemainingBars > 0) {
-      this.countInRemainingBars -= 1;
-      if (this.countInRemainingBars <= 0) {
-        this.store.setState("running");
-      }
     }
 
     const config = this.store.getSnapshot().config;

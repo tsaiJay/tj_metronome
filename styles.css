@@ -1,14 +1,54 @@
 :root {
   color-scheme: dark;
-  --bg: #0f1116;
-  --panel: #1a1d27;
-  --panel-2: #242837;
-  --text: #eef2ff;
-  --muted: #9ca7c7;
-  --accent: #56d3ff;
-  --accent-2: #8a7dff;
+
+  /* --- 頁面 / 大背景 --- */
+  --bg: #0e0c12;
+  /* body 放射漸層中心色（深紫，避免純灰藍） */
+  --page-gradient-spot: #1e1832;
+
+  /* --- 面板與表面 --- */
+  --panel: #16131e;
+  --panel-2: #1f1a2a;
+  --border-panel: #342d48;
+
+  /* --- 文字 --- */
+  --text: #f0ecff;
+  --muted: #9b94b3;
+  /* 用在 accent 背景上的反色字（如分組條 active） */
+  --text-on-accent: #ffffff;
+
+  /* --- 品牌 / 強調 / 語意 --- */
+  --accent: #b8a8ff;
+  --accent-2: #8b7cf6;
+  /* 主按鈕漸層末端、較亮的高光紫 */
+  --accent-highlight: #d4c8ff;
   --danger: #ff6b79;
   --ok: #5cff9f;
+
+  /* --- 節拍視覺化：正拍 strong / medium / weak（同色系由淺到深） --- */
+  --viz-accent-strong: #c9b8ff;
+  --viz-accent-medium: #6e5fb8;
+  --viz-accent-weak: #2f2848;
+  /* group-start 外圈與 medium 混色時的輔助色 */
+  --viz-ring-mix: #9a92b8;
+
+  /* --- Pulse ring：外環與預設點 --- */
+  --pulse-ring-border: #4a4268;
+  --pulse-dot: #5c5478;
+  --pulse-dot-subdivision: #454060;
+
+  /* --- 分組條（bar 下方區塊） --- */
+  --group-block-bg: #2c2640;
+
+  /* --- 表單：input / select / 一般 button --- */
+  --input-bg: #12101a;
+  --input-border: #3d3655;
+
+  /* --- 主按鈕（primary）：深字於淺紫漸層上 --- */
+  --primary-button-text: #120f1c;
+
+  /* --- 設定檔列表 --- */
+  --profile-border: #3a3550;
 }
 
 * {
@@ -19,7 +59,7 @@ body {
   margin: 0;
   min-height: 100vh;
   font-family: "SF Pro Text", "Noto Sans TC", sans-serif;
-  background: radial-gradient(circle at 25% 20%, #1a2142 0%, var(--bg) 45%);
+  background: radial-gradient(circle at 25% 20%, var(--page-gradient-spot) 0%, var(--bg) 45%);
   color: var(--text);
 }
 
@@ -55,7 +95,7 @@ body {
 
 .panel {
   background: linear-gradient(160deg, var(--panel) 0%, var(--panel-2) 100%);
-  border: 1px solid #2f3650;
+  border: 1px solid var(--border-panel);
   border-radius: 14px;
   padding: 14px;
 }
@@ -77,6 +117,38 @@ body {
   font-weight: 700;
 }
 
+/* State: keep one line; pending = dot only (no long suffix → no wrap / layout jump) */
+.value--state {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 6px;
+  min-height: 1.35em;
+}
+
+.state-pending-dot:not([hidden]) {
+  display: inline-block;
+  flex-shrink: 0;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 2px color-mix(in oklab, var(--accent) 35%, transparent);
+  animation: state-pending-pulse 1.1s ease-in-out infinite;
+}
+
+@keyframes state-pending-pulse {
+  0%,
+  100% {
+    opacity: 0.85;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+}
+
 .stats-top {
   display: grid;
   gap: 8px;
@@ -96,7 +168,7 @@ body {
   width: 250px;
   height: 250px;
   border-radius: 50%;
-  border: 2px solid #3f4c7a;
+  border: 2px solid var(--pulse-ring-border);
   position: absolute;
 }
 
@@ -105,15 +177,37 @@ body {
   width: 18px;
   height: 18px;
   border-radius: 999px;
-  background: #5a668f;
-  transition: all 90ms linear;
+  background: var(--pulse-dot);
+  transition: background 90ms linear, box-shadow 90ms linear, opacity 90ms linear;
 }
 
 .pulse-dot.subdivision {
   width: 10px;
   height: 10px;
-  background: #465073;
+  background: var(--pulse-dot-subdivision);
   opacity: 0.8;
+}
+
+.pulse-dot.meter-accent {
+  cursor: pointer;
+}
+
+/* 正拍 strong / medium / weak（點擊循環，同色系紫階） */
+.pulse-dot.meter-accent.accent-strong:not(.active) {
+  background: var(--viz-accent-strong);
+  box-shadow: 0 0 10px color-mix(in oklab, var(--viz-accent-strong), transparent 72%);
+}
+
+.pulse-dot.meter-accent.accent-strong.active {
+  background: var(--viz-accent-strong);
+}
+
+.pulse-dot.meter-accent.accent-medium {
+  background: var(--viz-accent-medium);
+}
+
+.pulse-dot.meter-accent.accent-weak {
+  background: var(--viz-accent-weak);
 }
 
 /* Grouping segment downbeats (e.g. 3+3+2): dot + one ring */
@@ -126,18 +220,23 @@ body {
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  border: 1px solid #8b96b8;
+  border: 1px solid color-mix(in oklab, var(--viz-accent-medium), var(--viz-ring-mix) 55%);
   box-sizing: border-box;
   pointer-events: none;
 }
 
 .pulse-dot.group-start.active::before {
-  border-color: color-mix(in oklab, var(--accent), white 18%);
+  border-color: color-mix(in oklab, var(--accent), transparent 35%);
+  box-shadow: 0 0 14px color-mix(in oklab, var(--accent), transparent 55%);
 }
 
+/* 當前拍：下層紫色光暈（不覆寫重音紫階填色） */
 .pulse-dot.active {
-  background: var(--accent);
-  box-shadow: 0 0 16px color-mix(in oklab, var(--accent), transparent 65%);
+  z-index: 2;
+  box-shadow:
+    0 0 0 1px color-mix(in oklab, var(--accent), transparent 28%),
+    0 0 14px 2px color-mix(in oklab, var(--accent), transparent 38%),
+    0 0 28px 6px color-mix(in oklab, var(--accent), transparent 52%);
 }
 
 .bar-progress {
@@ -149,14 +248,14 @@ body {
   padding: 8px 10px;
   border-radius: 10px;
   text-align: center;
-  background: #31395b;
+  background: var(--group-block-bg);
   color: var(--muted);
   font-weight: 600;
 }
 
 .group-block.active {
   background: var(--accent-2);
-  color: white;
+  color: var(--text-on-accent);
 }
 
 .runtime-counters {
@@ -191,7 +290,6 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
-  align-self: end;
   min-height: 36px;
 }
 
@@ -210,6 +308,18 @@ body {
   font-size: 14px;
   color: var(--text);
   line-height: 1;
+}
+
+.advance-field-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.advance-row-bars {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
 }
 
 .field span {
@@ -246,8 +356,8 @@ input[type="range"] {
 input,
 select,
 button {
-  background: #111420;
-  border: 1px solid #37426b;
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
   border-radius: 8px;
   color: var(--text);
   padding: 7px 8px;
@@ -259,8 +369,8 @@ button {
 }
 
 button.primary {
-  background: linear-gradient(90deg, var(--accent), #59ffe0);
-  color: #08111f;
+  background: linear-gradient(90deg, var(--accent-2), var(--accent-highlight));
+  color: var(--primary-button-text);
   border: none;
   font-weight: 700;
 }
@@ -314,39 +424,6 @@ button.primary {
   padding: 5px 8px;
 }
 
-.grouping-panel .accent-grid {
-  display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: minmax(40px, max-content);
-  gap: 6px;
-  overflow-x: auto;
-  padding-bottom: 4px;
-}
-
-.accent-chip {
-  width: 40px;
-  padding: 6px 0;
-  border-radius: 999px;
-}
-
-.accent-chip.strong {
-  background: color-mix(in oklab, var(--danger), transparent 20%);
-}
-
-.accent-chip.medium {
-  background: color-mix(in oklab, var(--accent-2), transparent 30%);
-}
-
-.accent-chip.weak {
-  background: #2f3550;
-}
-
-.hint {
-  margin: 6px 0 0;
-  color: var(--muted);
-  font-size: 12px;
-}
-
 .profile-actions {
   display: flex;
   gap: 6px;
@@ -367,7 +444,7 @@ button.primary {
 }
 
 .profile-item {
-  border: 1px solid #364066;
+  border: 1px solid var(--profile-border);
   border-radius: 8px;
   padding: 6px;
   display: grid;

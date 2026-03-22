@@ -1,4 +1,5 @@
 import { buildPulseAngles } from "../audio/click-voices.js";
+import { ACCENT_LEVELS, cycleAccentLevel } from "../lib/constants.js";
 import {
   getMeterBeatIndexForPulse,
   getPulsesPerBar,
@@ -44,7 +45,7 @@ function buildRingPoints(config) {
   });
 }
 
-export function createBeatVisualizer() {
+export function createBeatVisualizer({ store }) {
   const root = document.createElement("section");
   root.className = "panel visualizer-panel";
   root.innerHTML = `
@@ -63,7 +64,9 @@ export function createBeatVisualizer() {
       </div>
       <div>
         <p class="label">State</p>
-        <p class="value" data-id="state">idle</p>
+        <p class="value value--state">
+          <span data-id="state">paused</span><span class="state-pending-dot" data-id="state-pending" hidden title="設定將在下個小節開頭套用" aria-label="設定將在下個小節開頭套用"></span>
+        </p>
       </div>
     </div>
     <div class="pulse-ring" data-id="ring"></div>
@@ -79,6 +82,7 @@ export function createBeatVisualizer() {
     timeSig: root.querySelector('[data-id="time-sig"]'),
     grouping: root.querySelector('[data-id="grouping"]'),
     state: root.querySelector('[data-id="state"]'),
+    statePending: root.querySelector('[data-id="state-pending"]'),
     ring: root.querySelector('[data-id="ring"]'),
     barProgress: root.querySelector('[data-id="bar-progress"]'),
     bar: root.querySelector('[data-id="bar"]'),
@@ -91,13 +95,28 @@ export function createBeatVisualizer() {
     points.forEach((point) => {
       const dot = document.createElement("div");
       dot.className = point.isSubdivision ? "pulse-dot subdivision" : "pulse-dot";
-      if (point.isGroupStart) dot.classList.add("group-start");
+      if (!point.isSubdivision) {
+        dot.classList.add("meter-accent");
+        const meterBeat = getMeterBeatIndexForPulse(config, point.pulseIndex);
+        const accentIdx = meterBeat - 1;
+        const level = config.accentPattern[accentIdx] ?? ACCENT_LEVELS.weak;
+        dot.classList.add(`accent-${level}`);
+        dot.title = "點擊循環正拍重音：強 → 中 → 弱";
+        if (point.isGroupStart) dot.classList.add("group-start");
+        dot.addEventListener("click", (event) => {
+          event.stopPropagation();
+          const snap = store.getSnapshot();
+          const next = [...snap.config.accentPattern];
+          next[accentIdx] = cycleAccentLevel(next[accentIdx]);
+          store.updateConfig({ accentPattern: next });
+        });
+      }
       const x = Math.cos(point.angle) * RING_RADIUS;
       const y = Math.sin(point.angle) * RING_RADIUS;
       dot.style.transform = `translate(${x}px, ${y}px)`;
       if (
         point.pulseIndex === runtime.beatIndex &&
-        (runtime.state === "running" || runtime.state === "countIn")
+        runtime.state === "running"
       ) {
         dot.classList.add("active");
         dot.style.opacity = String(Math.max(config.flashIntensity, 0.25));
@@ -117,7 +136,7 @@ export function createBeatVisualizer() {
       item.textContent = `${groupSize}`;
       const beatEnd = beatCursor + groupSize - 1;
       if (
-        runtime.state !== "idle" &&
+        runtime.state === "running" &&
         meterBeatIndex >= beatCursor &&
         meterBeatIndex <= beatEnd &&
         runtime.activeGroupIndex === groupIndex
@@ -136,7 +155,8 @@ export function createBeatVisualizer() {
       nodes.bpm.textContent = String(config.bpm);
       nodes.timeSig.textContent = `${config.timeSigNumerator}/${config.timeSigDenominator}`;
       nodes.grouping.textContent = formatGrouping(config.grouping);
-      nodes.state.textContent = runtime.pendingConfig ? `${runtime.state} (pending next bar)` : runtime.state;
+      nodes.state.textContent = runtime.state;
+      nodes.statePending.hidden = !runtime.pendingConfig;
       nodes.bar.textContent = String(runtime.barIndex);
       nodes.beat.textContent = String(runtime.beatIndex);
       renderRing(config, runtime);

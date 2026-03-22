@@ -127,7 +127,7 @@ export function createTransportPanel({ store, scheduler }) {
       bpmRange.value = String(config.bpm);
       bpmNumber.value = String(config.bpm);
       nodes.startStop.textContent =
-        runtime.state === "running" || runtime.state === "countIn" ? "Pause" : "Start";
+        runtime.state === "running" ? "Pause" : "Start";
     },
   };
 }

@@ -36,56 +36,71 @@ function buildAccentPattern(numerator, grouping, currentPattern = []) {
     idx += size;
     if (idx >= numerator) break;
   }
-  for (let i = 0; i < numerator; i += 1) {
-    if (currentPattern[i] === ACCENT_LEVELS.medium) pattern[i] = ACCENT_LEVELS.medium;
+  const len = Math.min(numerator, currentPattern.length);
+  for (let i = 0; i < len; i += 1) {
+    const prev = currentPattern[i];
+    if (
+      prev === ACCENT_LEVELS.strong ||
+      prev === ACCENT_LEVELS.medium ||
+      prev === ACCENT_LEVELS.weak
+    ) {
+      pattern[i] = prev;
+    }
   }
-  pattern[0] = ACCENT_LEVELS.strong;
   return pattern;
 }
 
 export function normalizeConfig(input = {}) {
-  const bpm = clamp(Number(input.bpm ?? DEFAULT_CONFIG.bpm), BPM_MIN, BPM_MAX);
+  const { countInBars: _dropLegacyCountIn, ...inputRest } = input;
+  const bpm = clamp(Number(inputRest.bpm ?? DEFAULT_CONFIG.bpm), BPM_MIN, BPM_MAX);
   const timeSigNumerator = clamp(
-    Number.parseInt(input.timeSigNumerator ?? DEFAULT_CONFIG.timeSigNumerator, 10),
+    Number.parseInt(inputRest.timeSigNumerator ?? DEFAULT_CONFIG.timeSigNumerator, 10),
     1,
     MAX_NUMERATOR
   );
   const denominatorCandidate = Number.parseInt(
-    input.timeSigDenominator ?? DEFAULT_CONFIG.timeSigDenominator,
+    inputRest.timeSigDenominator ?? DEFAULT_CONFIG.timeSigDenominator,
     10
   );
   const timeSigDenominator = TIME_SIG_DENOMINATOR_OPTIONS.includes(denominatorCandidate)
     ? denominatorCandidate
     : DEFAULT_CONFIG.timeSigDenominator;
-  const grouping = ensureGrouping(input.grouping ?? DEFAULT_CONFIG.grouping, timeSigNumerator);
+  const grouping = ensureGrouping(inputRest.grouping ?? DEFAULT_CONFIG.grouping, timeSigNumerator);
   const accentPattern = buildAccentPattern(
     timeSigNumerator,
     grouping,
-    input.accentPattern ?? DEFAULT_CONFIG.accentPattern
+    inputRest.accentPattern ?? DEFAULT_CONFIG.accentPattern
   );
   return {
     ...DEFAULT_CONFIG,
-    ...input,
+    ...inputRest,
     bpm,
     timeSigNumerator,
     timeSigDenominator,
     grouping,
     accentPattern,
-    volumeAccent: clamp(Number(input.volumeAccent ?? DEFAULT_CONFIG.volumeAccent), 0, 1),
-    volumeNormal: clamp(Number(input.volumeNormal ?? DEFAULT_CONFIG.volumeNormal), 0, 1),
-    volumeGhost: clamp(Number(input.volumeGhost ?? DEFAULT_CONFIG.volumeGhost), 0, 1),
-    flashIntensity: clamp(Number(input.flashIntensity ?? DEFAULT_CONFIG.flashIntensity), 0, 1),
-    countInBars: clamp(Number.parseInt(input.countInBars ?? DEFAULT_CONFIG.countInBars, 10), 0, 2),
+    volumeAccent: clamp(Number(inputRest.volumeAccent ?? DEFAULT_CONFIG.volumeAccent), 0, 1),
+    volumeNormal: clamp(Number(inputRest.volumeNormal ?? DEFAULT_CONFIG.volumeNormal), 0, 1),
+    volumeGhost: clamp(Number(inputRest.volumeGhost ?? DEFAULT_CONFIG.volumeGhost), 0, 1),
+    flashIntensity: clamp(Number(inputRest.flashIntensity ?? DEFAULT_CONFIG.flashIntensity), 0, 1),
     autoRamp: {
       ...DEFAULT_CONFIG.autoRamp,
-      ...(input.autoRamp ?? {}),
-      everyBars: clamp(Number.parseInt(input.autoRamp?.everyBars ?? DEFAULT_CONFIG.autoRamp.everyBars, 10), 1, 64),
+      ...(inputRest.autoRamp ?? {}),
+      everyBars: clamp(
+        Number.parseInt(inputRest.autoRamp?.everyBars ?? DEFAULT_CONFIG.autoRamp.everyBars, 10),
+        1,
+        64
+      ),
       incrementBpm: clamp(
-        Number.parseInt(input.autoRamp?.incrementBpm ?? DEFAULT_CONFIG.autoRamp.incrementBpm, 10),
+        Number.parseInt(inputRest.autoRamp?.incrementBpm ?? DEFAULT_CONFIG.autoRamp.incrementBpm, 10),
         1,
         50
       ),
-      maxBpm: clamp(Number.parseInt(input.autoRamp?.maxBpm ?? DEFAULT_CONFIG.autoRamp.maxBpm, 10), BPM_MIN, BPM_MAX),
+      maxBpm: clamp(
+        Number.parseInt(inputRest.autoRamp?.maxBpm ?? DEFAULT_CONFIG.autoRamp.maxBpm, 10),
+        BPM_MIN,
+        BPM_MAX
+      ),
     },
   };
 }
@@ -119,7 +134,7 @@ export class MetronomeStore {
     this.profiles = this.#loadProfiles();
     this.activeProfileId = this.#loadLastProfileId();
     this.runtime = {
-      state: "idle",
+      state: "paused",
       barIndex: 1,
       beatIndex: 1,
       meterBeatIndex: 1,
@@ -262,7 +277,7 @@ export class MetronomeStore {
     const profile = this.profiles.find((item) => item.id === id);
     if (!profile) return false;
     const nextConfig = normalizeConfig(profile.config);
-    if (this.runtime.state === "running" || this.runtime.state === "countIn") {
+    if (this.runtime.state === "running") {
       this.runtime.pendingConfig = nextConfig;
     } else {
       this.config = nextConfig;
