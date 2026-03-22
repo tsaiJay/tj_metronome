@@ -64,10 +64,6 @@ export function createGroupingEditor({ store }) {
             <span>Ghost Vol</span>
             <input data-id="vol-ghost" type="range" min="0" max="1" step="0.01" />
           </label>
-          <label class="field">
-            <span>Flash</span>
-            <input data-id="flash" type="range" min="0.2" max="1" step="0.01" />
-          </label>
         </div>
       </div>
     </div>
@@ -83,7 +79,6 @@ export function createGroupingEditor({ store }) {
     volAccent: root.querySelector('[data-id="vol-accent"]'),
     volNormal: root.querySelector('[data-id="vol-normal"]'),
     volGhost: root.querySelector('[data-id="vol-ghost"]'),
-    flash: root.querySelector('[data-id="flash"]'),
   };
 
   TIME_SIG_DENOMINATOR_OPTIONS.forEach((value) => {
@@ -127,9 +122,6 @@ export function createGroupingEditor({ store }) {
   });
   nodes.volGhost.addEventListener("input", (event) => {
     store.updateConfig({ volumeGhost: Number(event.target.value) });
-  });
-  nodes.flash.addEventListener("input", (event) => {
-    store.updateConfig({ flashIntensity: Number(event.target.value) });
   });
 
   function cycleAccent(current) {
@@ -190,7 +182,6 @@ export function createGroupingEditor({ store }) {
       nodes.volAccent.value = String(config.volumeAccent);
       nodes.volNormal.value = String(config.volumeNormal);
       nodes.volGhost.value = String(config.volumeGhost);
-      nodes.flash.value = String(config.flashIntensity);
       renderAccentButtons(config);
     },
   };

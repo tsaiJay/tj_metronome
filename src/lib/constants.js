@@ -32,7 +32,7 @@ export const DEFAULT_CONFIG = {
   volumeAccent: 0.9,
   volumeNormal: 0.7,
   volumeGhost: 0.5,
-  flashIntensity: 0.85,
+  flashIntensity: 1,
   countInBars: 1,
   autoRamp: {
     enabled: false,
