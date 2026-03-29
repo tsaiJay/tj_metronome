@@ -12,7 +12,7 @@
 ![Metronome UI Example](docs/ui-sample.png)
 
 
-## 使用方式（快速）
+## 使用方式
 
 1. `Start` 開始 / 暫停播放
 2. 用 `BPM` slider 或 number 直接改速度
@@ -27,60 +27,54 @@
 - `ArrowUp` / `ArrowDown`: BPM ±1
 - `Shift + ArrowUp` / `Shift + ArrowDown`: BPM ±5
 
+## Run with Docker
 
-## 佈署與開發
-
-### 開發
-
-在專案根目錄執行：
-
+Start
 ```bash
-cd <project_path>/metronome
-python3 -m http.server 5173
+docker pull piano80742/tj_metronome:latest
+docker run -d --rm -p 8080:80 --name tj_metronome-local piano80742/tj_metronome:latest
 ```
+Stop
+```bash
+docker stop tj_metronome-local
+```
+## 本地建置
 
-打開：
-
-- [http://localhost:5173](http://localhost:5173)
-
-
-### 佈署正式化服務 with Docker
-
-> 請先安裝 Docker
-
-一鍵執行（build + run）：
+於 clone 後的專案根目錄：
 
 ```bash
-cd <project_path>/metronome
+git clone ...
 ./build/start.sh
 ```
 
-手動流程：
-
-1) 設定 port，在 `./build/env.config`（可不改，預設 `8080`）：
-
-```bash
-PROD_PORT=8080
-```
-
-2) 啟動正式容器：
-
-```bash
-cd <project_path>/metronome/build
-docker build -f Dockerfile -t metronome:prod ..
-source env.config
-docker run --rm -p "${PROD_PORT}:80" --name metronome-prod metronome:prod
-```
-
-服務會開在：
+預設埠為 8080。可在 `./build/env.config` 修改 `PROD_PORT`
 
 - [http://localhost:8080](http://localhost:8080)
 
-停止正式容器：
+<details>
+<summary>本地等效指令（未使用 start.sh）</summary>
+
+```bash
+cd <project_path>/metronome/build
+docker build -f Dockerfile -t tj_metronome:dev ..
+source env.config
+docker run --rm -p "${PROD_PORT}:80" --name tj_metronome-local tj_metronome:dev
+```
+
+</details>
+
+停止本地容器：
 
 ```bash
 cd <project_path>/metronome
 ./build/stop.sh
 ```
 
+### 開發
 
+```bash
+cd <project_path>/metronome
+python3 -m http.server 5173
+```
+
+- [http://localhost:5173](http://localhost:5173)

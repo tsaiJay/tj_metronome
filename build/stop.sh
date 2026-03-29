@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-CONTAINER_NAME="${CONTAINER_NAME:-tj_metronome-prod}"
+CONTAINER_NAME="${CONTAINER_NAME:-tj_metronome-local}"
 
 if docker ps -a --filter "name=^/${CONTAINER_NAME}$" --format '{{.Names}}' | read -r _; then
   docker rm -f "${CONTAINER_NAME}" >/dev/null
