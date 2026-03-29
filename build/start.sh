@@ -5,8 +5,8 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 BUILD_DIR="${ROOT_DIR}/build"
 ENV_FILE="${BUILD_DIR}/env.config"
 
-IMAGE_NAME="${IMAGE_NAME:-metronome:prod}"
-CONTAINER_NAME="${CONTAINER_NAME:-metronome-prod}"
+IMAGE_NAME="${IMAGE_NAME:-tj_metronome:prod}"
+CONTAINER_NAME="${CONTAINER_NAME:-tj_metronome-prod}"
 
 if [[ -f "${ENV_FILE}" ]]; then
   set -a
